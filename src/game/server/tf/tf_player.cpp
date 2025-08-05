@@ -9891,8 +9891,8 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			if ( iExplodeOnIgnite )
 			{
 				bool bExploded = false;
-				float flRadius = 125.f + iExplodeOnIgnite * 25.f;
-				float flDmg = 50.f + iExplodeOnIgnite * 100.f;
+				float flRadius = 32.f + iExplodeOnIgnite * 32.f;
+				float flDmg = 25.f + iExplodeOnIgnite * 25.f;
 
 				CBaseEntity	*pObjects[32];
 				int nCount = UTIL_EntitiesInSphere( pObjects, ARRAYSIZE( pObjects ), GetAbsOrigin(), flRadius, FL_CLIENT );
