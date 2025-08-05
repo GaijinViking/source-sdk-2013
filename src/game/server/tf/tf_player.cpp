@@ -9891,7 +9891,8 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			if ( iExplodeOnIgnite )
 			{
 				bool bExploded = false;
-				float flRadius = 200.f;
+				float flRadius = 125.f + iExplodeOnIgnite * 25.f;
+				float flDmg = 50.f + iExplodeOnIgnite * 100.f;
 
 				CBaseEntity	*pObjects[32];
 				int nCount = UTIL_EntitiesInSphere( pObjects, ARRAYSIZE( pObjects ), GetAbsOrigin(), flRadius, FL_CLIENT );
@@ -9926,7 +9927,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 					if ( !FVisible( pTFBlastVictim, MASK_OPAQUE ) )
 						continue;
 
-					pTFBlastVictim->m_Shared.MakeBleed( pTFGasTosser, pGasCan, 0.1f, 350.f, false, TF_DMG_CUSTOM_BURNING );
+					pTFBlastVictim->m_Shared.MakeBleed( pTFGasTosser, pGasCan, 0.1f, flDmg, false, TF_DMG_CUSTOM_BURNING );
 					DispatchParticleEffect( "dragons_fury_effect", pTFBlastVictim->GetAbsOrigin(), vec3_angle );
 					bExploded = true;
 				}
