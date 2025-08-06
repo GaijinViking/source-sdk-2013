@@ -388,21 +388,12 @@ void CTFPowerupBottle::ReapplyProvision( void )
 				if ( m_bActive )
 				{
 					CBaseEntity *pObjects[MAX_PLAYERS_ARRAY_SAFE];
-					int nCount = UTIL_EntitiesInSphere( pObjects, ARRAYSIZE( pObjects ), pTFPlayer->GetAbsOrigin(), 128, FL_CLIENT );
+					int nCount = UTIL_EntitiesInSphere( pObjects, MAX_PLAYERS_ARRAY_SAFE, pTFPlayer->GetAbsOrigin(), 128, FL_CLIENT );
 					for ( int i = 0; i < nCount; i++ )
 					{
-						CBaseCombatCharacter *pBaseTarget = NULL;
 						CTFPlayer *pTarget = ToTFPlayer( pObjects[i] );
-						if ( !pTarget )
-						{
-							pBaseTarget = dynamic_cast<CBaseCombatCharacter*>( pObjects[i] );
-						}
-						else
-						{
-							pBaseTarget = pTarget;
-						}
 
-						if ( !pBaseTarget || !pTarget || !pTarget->IsAlive() || pBaseTarget->GetTeamNumber() != pTFPlayer->GetTeamNumber() )
+						if ( !pTarget || !pTarget->IsAlive() || !pTarget->InSameTeam( pTFPlayer ) )
 							continue;
 
 						pTarget->m_Shared.AddCond( TF_COND_STEALTHED_USER_BUFF, 7, pTFPlayer );
