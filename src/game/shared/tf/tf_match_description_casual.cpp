@@ -39,12 +39,14 @@ public:
 		m_pszMatchEndKickWarning		= "#TF_Competitive_GameOver";
 		m_pszMatchStartSound			= "MatchMaking.RoundStartCasual";
 		m_bAutoReady					= true;
+		m_bFixedWeaponSpread			= true;
 		m_bUseAutoBalance				= true;
 		m_bRequireCompleteMatch			= false;
 		m_bAllowSpecModeChange			= true;
 		m_bAutomaticallyRequeueAfterMatchEnds	= true;
 		m_bUsesMapVoteOnRoundEnd		= true;
 		m_bScramblesTeamsOnRollingMatch = true;
+		m_bAllowTeamChange				= true;
 		m_bUsesXP						= true;
 		m_bUsesSurveys					= true;
 		m_pszModeNameLocToken			= "#TF_Matchmaking_HeaderCasual";
