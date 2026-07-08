@@ -27,8 +27,6 @@
 
 #define BREATH_VOL_MAX  0.6
 
-#define ZOMBIE_ENEMY_BREATHE_DIST		300	// How close we must be to our enemy before we start breathing hard.
-
 envelopePoint_t envPoisonZombineMoanVolumeFast[] =
 {
 	{	1.0f, 1.0f,
@@ -60,8 +58,8 @@ envelopePoint_t envPoisonZombineBreatheVolumeOffShort[] =
 //
 enum
 {
-	SCHED_ZOMBIE_POISON_RANGE_ATTACK1 = LAST_BASE_ZOMBIE_SCHEDULE,
-	SCHED_ZOMBIE_POISON_RANGE_ATTACK2,
+	SCHED_ZOMBINE_POISON_RANGE_ATTACK1 = LAST_BASE_ZOMBIE_SCHEDULE,
+	SCHED_ZOMBINE_POISON_RANGE_ATTACK2,
 };
 
 int AE_ZOMBINE_POISON_SPIT;
@@ -89,7 +87,9 @@ static const char *pMoanSounds[] =
 ConVar sk_zombine_poison_health( "sk_zombine_poison_health", "0");
 ConVar sk_zombine_poison_dmg_bite( "sk_zombine_poison_dmg_bite", "0");
 ConVar sk_zombine_poison_dmg_puke( "sk_zombine_poison_dmg_puke", "0");
-ConVar sk_zombine_poison_total_bile( "sk_zombine_poison_total_bile", "0");
+ConVar sk_zombine_poison_puke_near( "sk_zombine_poison_puke_near", "0");
+ConVar sk_zombine_poison_puke_range( "sk_zombine_poison_puke_range", "0");
+ConVar sk_zombine_poison_puke_max( "sk_zombine_poison_puke_max", "0");
 
 class CNPC_PoisonZombine : public CAI_BlendingHost<CNPC_BaseZombie>
 {
@@ -171,6 +171,8 @@ private:
 	CSoundPatch *m_pSlowBreathSound;
 
 	float m_flNextPainSoundTime;
+
+ float m_flPuke
 
 	bool m_bNearEnemy;
 };
@@ -395,39 +397,6 @@ void CNPC_PoisonZombine::SetZombieModel( void )
 //-----------------------------------------------------------------------------
 int CNPC_PoisonZombine::RangeAttack1Conditions( float flDot, float flDist )
 {
-	if ( !m_nCrabCount )
-	{
-		//DevMsg("Range1: No crabs\n");
-		return 0;
-	}
-
-	if ( m_flNextCrabThrowTime > gpGlobals->curtime )
-	{
-		//DevMsg("Range1: Too soon\n");
-		return 0;
-	}
-
-	if ( flDist < ZOMBIE_HC_LEAP_RANGE_MIN )
-	{
-		//DevMsg("Range1: Too close to attack\n");
-		return COND_TOO_CLOSE_TO_ATTACK;
-	}
-	
-	if ( flDist > ZOMBIE_HC_LEAP_RANGE_MAX )
-	{
-		//DevMsg("Range1: Too far to attack\n");
-		return COND_TOO_FAR_TO_ATTACK;
-	}
-
-	if ( flDot < ZOMBIE_HC_LEAP_CONE )
-	{
-		//DevMsg("Range1: Not facing\n");
-		return COND_NOT_FACING_ATTACK;
-	}
-
-	m_nThrowCrab = RandomThrowCrab();
-
-	//DevMsg("*** Range1: Can range attack\n");
 	return COND_CAN_RANGE_ATTACK1;
 }
 
@@ -436,6 +405,7 @@ int CNPC_PoisonZombine::RangeAttack1Conditions( float flDot, float flDist )
 //-----------------------------------------------------------------------------
 int CNPC_PoisonZombine::RangeAttack2Conditions( float flDot, float flDist )
 {
+	return COND_CAN_RANGE_ATTACK2;
 }
 
 //-----------------------------------------------------------------------------
@@ -481,7 +451,7 @@ void CNPC_PoisonZombine::HandleAnimEvent( animevent_t *pEvent )
 		QAngle qaPunch( 45, random->RandomInt(-5, 5), random->RandomInt(-5, 5) );
 		AngleVectors( GetLocalAngles(), &forward );
 		forward = forward * 200;
-		ClawAttack( GetClawAttackRange(), sk_zombie_poison_dmg_bite.GetFloat(), qaPunch, forward, ZOMBIE_BLOOD_BITE );
+		ClawAttack( GetClawAttackRange(), sk_zombine_poison_dmg_bite.GetFloat(), qaPunch, forward, ZOMBIE_BLOOD_BITE );
 		return;
 	}
 
@@ -493,10 +463,6 @@ void CNPC_PoisonZombine::HandleAnimEvent( animevent_t *pEvent )
 //-----------------------------------------------------------------------------
 void CNPC_PoisonZombine::PrescheduleThink( void )
 {
-	if ( HasCondition( COND_NEW_ENEMY ) )
-	{
-		m_flNextCrabThrowTime = gpGlobals->curtime + random->RandomInt( ZOMBIE_THROW_FIRST_MIN_DELAY, ZOMBIE_THROW_FIRST_MAX_DELAY );
-	}
 
 	bool bNearEnemy = false;
 	if ( GetEnemy() != NULL )
@@ -596,12 +562,12 @@ int CNPC_PoisonZombine::TranslateSchedule( int scheduleType )
 {
 	if ( scheduleType == SCHED_RANGE_ATTACK2 )
 	{
-		return SCHED_ZOMBIE_POISON_RANGE_ATTACK2;
+		return SCHED_ZOMBINE_POISON_RANGE_ATTACK2;
 	}
 
 	if ( scheduleType == SCHED_RANGE_ATTACK1 )
 	{
-		return SCHED_ZOMBIE_POISON_RANGE_ATTACK1;
+		return SCHED_ZOMBINE_POISON_RANGE_ATTACK1;
 	}
 
 	if ( scheduleType == SCHED_COMBAT_FACE && IsUnreachable( GetEnemy() ) )
@@ -706,14 +672,6 @@ void CNPC_PoisonZombine::FootstepSound( bool fRightFoot )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: If we don't have any headcrabs to throw, we must close to attack our enemy.
-//-----------------------------------------------------------------------------
-bool CNPC_PoisonZombine::MustCloseToAttack(void)
-{
-	return (m_nCrabCount == 0);
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Open a window and let a little bit of the looping moan sound
 //			come through.
 //-----------------------------------------------------------------------------
@@ -756,19 +714,15 @@ bool CNPC_PoisonZombine::ShouldBecomeTorso( const CTakeDamageInfo &info, float f
 	return false;
 }
 
-int ACT_ZOMBIE_POISON_THREAT;
-
 AI_BEGIN_CUSTOM_NPC( npc_poisonzombine, CNPC_PoisonZombine )
 
-	DECLARE_ACTIVITY( ACT_ZOMBIE_POISON_THREAT )
-
 	//Adrian: events go here
-	DECLARE_ANIMEVENT( AE_ZOMBIE_POISON_SPIT )
- DECLARE_ANIMEVENT( AE_ZOMBIE_POISON_PUKE )
+	DECLARE_ANIMEVENT( AE_ZOMBINE_POISON_SPIT )
+ DECLARE_ANIMEVENT( AE_ZOMBINE_POISON_PUKE )
 
 	DEFINE_SCHEDULE
 	(
-		SCHED_ZOMBIE_POISON_RANGE_ATTACK2,
+		SCHED_ZOMBINE_POISON_RANGE_ATTACK2,
 
 		"	Tasks"
 		"		TASK_STOP_MOVING						0"
@@ -783,7 +737,7 @@ AI_BEGIN_CUSTOM_NPC( npc_poisonzombine, CNPC_PoisonZombine )
 
 	DEFINE_SCHEDULE
 	(
-		SCHED_ZOMBIE_POISON_RANGE_ATTACK1,
+		SCHED_ZOMBINE_POISON_RANGE_ATTACK1,
 
 		"	Tasks"
 		"		TASK_STOP_MOVING		0"
