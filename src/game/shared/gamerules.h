@@ -238,13 +238,13 @@ public:
 	{
 		int oldLevel = g_iSkillLevel; 
 
-		if ( iLevel < 1 )
+		if ( iLevel < 0 )
 		{
-			iLevel = 1;
+			iLevel = 0;
 		}
-		else if ( iLevel > 3 )
+		else if ( iLevel > 4 )
 		{
-			iLevel = 3; 
+			iLevel = 4; 
 		}
 
 		g_iSkillLevel = iLevel;
