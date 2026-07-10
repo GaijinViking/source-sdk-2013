@@ -26,17 +26,17 @@ extern int	g_interactionBarnacleVictimReleased;
 extern int	g_interactionBarnacleVictimGrab;
 
 //Bullsquid
-//extern int	g_interactionBullsquidPlay;
-//extern int	g_interactionBullsquidThrow;
+extern int	g_interactionBullsquidPlay;
+extern int	g_interactionBullsquidThrow;
 
 //Combine
 extern int	g_interactionCombineBash;
 extern int	g_interactionCombineRequestCover;
 
 //Houndeye
-//extern int	g_interactionHoundeyeGroupAttack;
-//extern int	g_interactionHoundeyeGroupRetreat;
-//extern int	g_interactionHoundeyeGroupRalley;
+extern int	g_interactionHoundeyeGroupAttack;
+extern int	g_interactionHoundeyeGroupRetreat;
+extern int	g_interactionHoundeyeGroupRalley;
 
 //Scanner
 extern int	g_interactionScannerInspect;
