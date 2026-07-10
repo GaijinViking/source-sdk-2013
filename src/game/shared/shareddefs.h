@@ -259,10 +259,11 @@ enum CastVote
 // -----------------------------------------
 // Skill Level
 // -----------------------------------------
-#define SKILL_EASY		1
+#define SKILL_STORY  0
+#define SKILL_EASY		 1
 #define SKILL_MEDIUM	2
-#define SKILL_HARD		3
-
+#define SKILL_HARD		 3
+#define SKILL_EXPERT 4
 
 // Weapon flags
 // -----------------------------------------
