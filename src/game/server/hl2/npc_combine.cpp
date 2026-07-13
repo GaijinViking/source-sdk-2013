@@ -332,9 +332,8 @@ void CNPC_Combine::Spawn( void )
 	m_flNextAlertSoundTime	= 0;
 	m_bShouldPatrol			= false;
 
-	//	CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_CLIMB);
-	// JAY: Disabled jump for now - hard to compare to HL1
-	CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND );
+	CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_CLIMB );
+	// CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND );
 
 	CapabilitiesAdd( bits_CAP_AIM_GUN );
 
@@ -342,15 +341,14 @@ void CNPC_Combine::Spawn( void )
 	// CapabilitiesAdd(bits_CAP_INNATE_RANGE_ATTACK2 );
 
 	// Innate range attack for kicking
-	CapabilitiesAdd(bits_CAP_INNATE_MELEE_ATTACK1 );
+	CapabilitiesAdd( bits_CAP_INNATE_MELEE_ATTACK1 );
 
 	// Can be in a squad
-	CapabilitiesAdd( bits_CAP_SQUAD);
+	CapabilitiesAdd( bits_CAP_SQUAD );
+	CapabilitiesAdd( bits_CAP_NO_HIT_SQUADMATES );
 	CapabilitiesAdd( bits_CAP_USE_WEAPONS );
 
 	CapabilitiesAdd( bits_CAP_DUCK );				// In reloading and cover
-
-	CapabilitiesAdd( bits_CAP_NO_HIT_SQUADMATES );
 
 	m_bFirstEncounter	= true;// this is true when the grunt spawns, because he hasn't encountered an enemy yet.
 
@@ -3280,6 +3278,16 @@ const char* CNPC_Combine::GetSquadSlotDebugName( int iSquadSlot )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+bool CNPC_Combine::IsHeavyCombatVariant()
+{
+	if( m_iCombatVariant == COMBAT_VARIANT_DEFAULT )
+	{
+		return false;
+	}
+
+	return true;
+}
+
 bool CNPC_Combine::IsUsingTacticalVariant( int variant )
 {
 	if( variant == TACTICAL_VARIANT_PRESSURE_ENEMY && m_iTacticalVariant == TACTICAL_VARIANT_PRESSURE_ENEMY_UNTIL_CLOSE )
