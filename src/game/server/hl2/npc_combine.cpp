@@ -103,10 +103,16 @@ Activity ACT_WALK_MARCH;
 // -----------------------------------------------
 enum SquadSlot_T
 {	
-	SQUAD_SLOT_GRENADE1 = LAST_SHARED_SQUADSLOT,
+ SQUAD_SLOT_GRENADE1 = LAST_SHARED_SQUADSLOT,
 	SQUAD_SLOT_GRENADE2,
 	SQUAD_SLOT_ATTACK_OCCLUDER,
 	SQUAD_SLOT_OVERWATCH,
+ SQUAD_SLOT_SUPPRESSION,
+ SQUAD_SLOT_ESTABLISH_LOF1,
+ SQUAD_SLOT_ESTABLISH_LOF2,
+ SQUAD_SLOT_RECEIVE_ORDERS,
+ SQUAD_SLOT_FLANKING_LEFT,
+ SQUAD_SLOT_FLANKING_RIGHT,
 };
 
 enum TacticalVariant_T
@@ -1551,16 +1557,23 @@ int CNPC_Combine::SelectCombatSchedule()
 					}
 				}
 
-				if( !bFirstContact && OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+				if ( !bFirstContact )
 				{
-					if( random->RandomInt(0, 100) < 60 )
+					if ( OccupyStrategySlotRange( SQUAD_SLOT_ESTABLISH_LOF1, SQUAD_SLOT_ESTABLISH_LOF2 ) )
 					{
-						return SCHED_ESTABLISH_LINE_OF_FIRE;
-					}
-					else
-					{
-						return SCHED_COMBINE_PRESS_ATTACK;
-					}
+      return SCHED_ESTABLISH_LINE_OF_FIRE_IN_COVER;
+     }
+				 else if ( OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+     {
+      if ( random->RandomInt(1, 100) =< 60 )
+      {
+						 return SCHED_ESTABLISH_LINE_OF_FIRE;
+      }
+      else
+      {
+       return SCHED_COMBINE_PRESS_ATTACK;
+      }
+     }
 				}
 
 				return SCHED_TAKE_COVER_FROM_ENEMY;
@@ -1591,7 +1604,7 @@ int CNPC_Combine::SelectCombatSchedule()
 			// A crouching guy tries to stay stuck in.
 			if( !IsCrouching() )
 			{
-				if( GetEnemy() && random->RandomFloat( 0, 100 ) < 50 && CouldShootIfCrouching( GetEnemy() ) )
+				if( GetEnemy() && random->RandomFloat( 1, 100 ) =< 50 && CouldShootIfCrouching( GetEnemy() ) )
 				{
 					Crouch();
 				}
@@ -1990,7 +2003,7 @@ int CNPC_Combine::SelectScheduleAttack()
 #endif
 
 		// Engage if allowed
-		if ( OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+		if ( IsHeavyVariant() || OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
 		{
 			return SCHED_RANGE_ATTACK1;
 		}
@@ -2092,9 +2105,12 @@ int CNPC_Combine::TranslateSchedule( int scheduleType )
 		break;
 	case SCHED_COMBINE_TAKECOVER_FAILED:
 		{
-			if ( HasCondition( COND_CAN_RANGE_ATTACK1 ) && OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+			if ( HasCondition( COND_CAN_RANGE_ATTACK1 ) )
 			{
-				return TranslateSchedule( SCHED_RANGE_ATTACK1 );
+    if ( IsHeavyVariant() || OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+				{
+     return TranslateSchedule( SCHED_RANGE_ATTACK1 );
+    }
 			}
 
 			// Run somewhere randomly
@@ -2136,15 +2152,15 @@ int CNPC_Combine::TranslateSchedule( int scheduleType )
 
 			// FIXME: this should be generalized by the schedules that are selected, or in the definition of 
 			// what "cover" means (i.e., trace attack vulnerability vs. physical attack vulnerability
-			if (pEntity && pEntity->MyNPCPointer())
+			if ( pEntity && pEntity->MyNPCPointer() )
 			{
-				if ( !(pEntity->MyNPCPointer()->CapabilitiesGet( ) & bits_CAP_WEAPON_RANGE_ATTACK1))
+				if ( !( pEntity->MyNPCPointer()->CapabilitiesGet( ) & bits_CAP_WEAPON_RANGE_ATTACK1 ) )
 				{
 					return TranslateSchedule( SCHED_ESTABLISH_LINE_OF_FIRE );
 				}
 			}
 			// don't charge forward if there's a hint group
-			if (GetHintGroup() != NULL_STRING)
+			if ( GetHintGroup() != NULL_STRING )
 			{
 				return TranslateSchedule( SCHED_ESTABLISH_LINE_OF_FIRE );
 			}
@@ -2155,16 +2171,16 @@ int CNPC_Combine::TranslateSchedule( int scheduleType )
 			// always assume standing
 			// Stand();
 
-			if( CanAltFireEnemy(true) && OccupyStrategySlot(SQUAD_SLOT_SPECIAL_ATTACK) )
+			if ( CanAltFireEnemy( true ) && OccupyStrategySlot( SQUAD_SLOT_SPECIAL_ATTACK ) )
 			{
 				// If an elite in the squad could fire a combine ball at the player's last known position,
 				// do so!
 				return SCHED_COMBINE_AR2_ALTFIRE;
 			}
 
-			if( IsUsingTacticalVariant( TACTICAL_VARIANT_PRESSURE_ENEMY ) && !IsRunningBehavior() )
+			if ( IsUsingTacticalVariant( TACTICAL_VARIANT_PRESSURE_ENEMY ) && !IsRunningBehavior() )
 			{
-				if( OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+				if ( IsHeavyVariant() || OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
 				{
 					return SCHED_COMBINE_PRESS_ATTACK;
 				}
@@ -3118,7 +3134,7 @@ bool CNPC_Combine::OnBeginMoveAndShoot()
 {
 	if ( BaseClass::OnBeginMoveAndShoot() )
 	{
-		if( HasStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+		if( IsHeavyVariant() || HasStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
 			return true; // already have the slot I need
 
 		if( !HasStrategySlotRange( SQUAD_SLOT_GRENADE1, SQUAD_SLOT_ATTACK_OCCLUDER ) && OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
@@ -3237,6 +3253,16 @@ const char* CNPC_Combine::GetSquadSlotDebugName( int iSquadSlot )
 	case SQUAD_SLOT_ATTACK_OCCLUDER:	return "SQUAD_SLOT_ATTACK_OCCLUDER";	
 		break;
 	case SQUAD_SLOT_OVERWATCH:			return "SQUAD_SLOT_OVERWATCH";
+		break;
+	case SQUAD_SLOT_SUPPRESSION:			return "SQUAD_SLOT_SUPPRESSION";
+		break;
+	case SQUAD_SLOT_ESTABLISH_LOF1:			return "SQUAD_SLOT_ESTABLISH_LOF1";
+		break;
+	case SQUAD_SLOT_ESTABLISH_LOF2:			return "SQUAD_SLOT_ESTABLISH_LOF2";
+		break;
+	case SQUAD_SLOT_FLANKING_LEFT:			return "SQUAD_SLOT_FLANKING_LEFT";
+		break;
+	case SQUAD_SLOT_FLANKING_RIGHT:			return "SQUAD_SLOT_FLANKING_RIGHT";
 		break;
 	}
 
