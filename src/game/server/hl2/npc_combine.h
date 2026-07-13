@@ -117,6 +117,9 @@ public:
 	bool			HandleInteraction(int interactionType, void *data, CBaseCombatCharacter *sourceEnt);
 	const char*		GetSquadSlotDebugName( int iSquadSlot );
 
+	
+	bool			IsUsingCombatVariant( int variant ) { return m_iCombatVariant == variant; }
+	bool			IsHeavyCombatVariant();
 	bool			IsUsingTacticalVariant( int variant );
 	bool			IsUsingPathfindingVariant( int variant ) { return m_iPathfindingVariant == variant; }
 
