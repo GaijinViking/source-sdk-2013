@@ -292,6 +292,7 @@ public:
 	bool			m_fIsElite;
 	Vector			m_vecAltFireTarget;
 
+	int				m_iCombatVariant;
 	int				m_iTacticalVariant;
 	int				m_iPathfindingVariant;
 };
