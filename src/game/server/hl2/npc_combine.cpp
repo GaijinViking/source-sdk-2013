@@ -104,15 +104,23 @@ Activity ACT_WALK_MARCH;
 enum SquadSlot_T
 {	
  SQUAD_SLOT_GRENADE1 = LAST_SHARED_SQUADSLOT,
-	SQUAD_SLOT_GRENADE2,
-	SQUAD_SLOT_ATTACK_OCCLUDER,
-	SQUAD_SLOT_OVERWATCH,
+ SQUAD_SLOT_GRENADE2,
+ SQUAD_SLOT_ATTACK_OCCLUDER,
+ SQUAD_SLOT_OVERWATCH,
  SQUAD_SLOT_SUPPRESSION,
+ SQUAD_SLOT_RECEIVE_ORDERS,
+ SQUAD_SLOT_DEPLOY_MANHACK,
  SQUAD_SLOT_ESTABLISH_LOF1,
  SQUAD_SLOT_ESTABLISH_LOF2,
- SQUAD_SLOT_RECEIVE_ORDERS,
  SQUAD_SLOT_FLANKING_LEFT,
  SQUAD_SLOT_FLANKING_RIGHT,
+};
+
+enum CombatVariant_T
+{
+	COMBAT_VARIANT_DEFAULT = 0,
+	COMBAT_VARIANT_SHOTGUN, // Enables shield
+	COMBAT_VARIANT_MINIGUN, // Uses Suppressor nodes
 };
 
 enum TacticalVariant_T
@@ -179,6 +187,7 @@ DEFINE_FIELD( m_iLastAnimEventHandled, FIELD_INTEGER ),
 DEFINE_FIELD( m_fIsElite, FIELD_BOOLEAN ),
 DEFINE_FIELD( m_vecAltFireTarget, FIELD_VECTOR ),
 
+DEFINE_FIELD( m_iCombatVariant, FIELD_INTEGER ),
 DEFINE_KEYFIELD( m_iTacticalVariant, FIELD_INTEGER, "tacticalvariant" ),
 DEFINE_KEYFIELD( m_iPathfindingVariant, FIELD_INTEGER, "pathfindingvariant" ),
 
@@ -2003,7 +2012,7 @@ int CNPC_Combine::SelectScheduleAttack()
 #endif
 
 		// Engage if allowed
-		if ( IsHeavyVariant() || OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+		if ( IsHeavyCombatVariant() || OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
 		{
 			return SCHED_RANGE_ATTACK1;
 		}
@@ -2107,7 +2116,7 @@ int CNPC_Combine::TranslateSchedule( int scheduleType )
 		{
 			if ( HasCondition( COND_CAN_RANGE_ATTACK1 ) )
 			{
-    if ( IsHeavyVariant() || OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+    if ( IsHeavyCombatVariant() || OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
 				{
      return TranslateSchedule( SCHED_RANGE_ATTACK1 );
     }
@@ -2180,7 +2189,7 @@ int CNPC_Combine::TranslateSchedule( int scheduleType )
 
 			if ( IsUsingTacticalVariant( TACTICAL_VARIANT_PRESSURE_ENEMY ) && !IsRunningBehavior() )
 			{
-				if ( IsHeavyVariant() || OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+				if ( IsHeavyCombatVariant() || OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
 				{
 					return SCHED_COMBINE_PRESS_ATTACK;
 				}
@@ -3134,7 +3143,7 @@ bool CNPC_Combine::OnBeginMoveAndShoot()
 {
 	if ( BaseClass::OnBeginMoveAndShoot() )
 	{
-		if( IsHeavyVariant() || HasStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
+		if( IsHeavyCombatVariant() || HasStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
 			return true; // already have the slot I need
 
 		if( !HasStrategySlotRange( SQUAD_SLOT_GRENADE1, SQUAD_SLOT_ATTACK_OCCLUDER ) && OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
@@ -3338,6 +3347,14 @@ DECLARE_ANIMEVENT( COMBINE_AE_ALTFIRE )
 
 DECLARE_SQUADSLOT( SQUAD_SLOT_GRENADE1 )
 DECLARE_SQUADSLOT( SQUAD_SLOT_GRENADE2 )
+DECLARE_SQUADSLOT( SQUAD_SLOT_OVERWATCH )
+DECLARE_SQUADSLOT( SQUAD_SLOT_SUPPRESSION )
+DECLARE_SQUADSLOT( SQUAD_SLOT_RECEIVE_ORDERS )
+DECLARE_SQUADSLOT( SQUAD_SLOT_DEPLOY_MANHACK )
+DECLARE_SQUADSLOT( SQUAD_SLOT_ESTABLISH_LOF1 )
+DECLARE_SQUADSLOT( SQUAD_SLOT_ESTABLISH_LOF2 )
+DECLARE_SQUADSLOT( SQUAD_SLOT_FLANKING_LEFT )
+DECLARE_SQUADSLOT( SQUAD_SLOT_FLANKING_RIGHT )
 
 DECLARE_CONDITION( COND_COMBINE_NO_FIRE )
 DECLARE_CONDITION( COND_COMBINE_DEAD_FRIEND )
